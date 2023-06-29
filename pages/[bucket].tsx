@@ -41,12 +41,12 @@ export const getStaticPaths: GetStaticPaths<{ bucket: string }> = async () => {
 }
 
 function BucketPage({ bucket }: Props) {
-  const { reload } = useRouter()
+  const { push } = useRouter()
 
   function resetBucket() {
     Cookie.remove(UID_COOKIE)
     Statsig.logEvent('reset-bucket')
-    reload()
+    push('/')
   }
 
   return (
@@ -85,7 +85,7 @@ function BucketPage({ bucket }: Props) {
             : bucket}
         </pre>
         <Button size="lg" onClick={resetBucket}>
-          Reset bucket
+          Reset bucket and revisit site
         </Button>
         <Text>
           In order to set this demo up yourself, in the <Link href="https://console.statsig.com/" target="_blank">
