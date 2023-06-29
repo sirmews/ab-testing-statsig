@@ -12,9 +12,8 @@ import {
   Snippet,
   Code,
 } from '@vercel/examples-ui'
-import { EXPERIMENT, UID_COOKIE, GROUP_PARAM_FALLBACK } from '../lib/constants'
+import { FEATURE_FLAG, EXPERIMENT, UID_COOKIE, GROUP_PARAM_FALLBACK } from '../lib/constants'
 import api from '../lib/statsig-api'
-import exampleScreenshot from '../public/example_experiment.png'
 
 interface Props {
   bucket: string
@@ -41,6 +40,9 @@ export const getStaticPaths: GetStaticPaths<{ bucket: string }> = async () => {
 }
 
 function BucketPage({ bucket }: Props) {
+  // read a value from the client side cookie
+  const featureFlagStatus = Cookie.get(FEATURE_FLAG) || 'false'
+  
   const { push } = useRouter()
 
   function resetBucket() {
@@ -83,7 +85,14 @@ function BucketPage({ bucket }: Props) {
           {bucket === GROUP_PARAM_FALLBACK
             ? 'Experiment not set up, please read README to set up example.'
             : bucket}
+          {}
         </pre>
+
+        <pre className="bg-black text-white font-mono text-left py-2 px-4 rounded-lg text-sm leading-6">
+          feature flag `vercel_edge`:{' '}
+          {featureFlagStatus === 'true' ? 'on' : 'off'}
+        </pre>
+
         <Button size="lg" onClick={resetBucket}>
           Reset bucket and revisit site
         </Button>
@@ -95,67 +104,7 @@ function BucketPage({ bucket }: Props) {
           Make sure to start the experiment, and from there this example will display the bucket that the user was assigned to.
           See the screenshot below for an example experiment setup.
         </Text>
-        <Image
-          src={exampleScreenshot}
-          alt="Example Statsig Experiment Setup"
-        />
-      </section>
 
-      <section className="flex flex-col gap-6">
-        <Text variant="h2">Using metrics in your experiments</Text>
-        <Text>
-          <Link href="https://docs.statsig.com/metrics" target="_blank">
-            Statsig Metrics
-          </Link>{' '}
-          are a way to track events that happen in your site. One way to enable
-          them is to pass the <Code>StatsigProvider</Code> to{' '}
-          <Link
-            href="https://nextjs.org/docs/advanced-features/custom-app"
-            target="_blank"
-          >
-            <Code>_app.tsx</Code>
-          </Link>
-          .
-        </Text>
-        <Snippet>{`import Cookies from 'js-cookie'
-import { StatsigProvider } from 'statsig-react'
-
-function App({ Component, pageProps }) {
-  const Layout = getLayout(Component)
-
-  // middleware will automatically set a cookie for the user if they visit a page
-  const userID = Cookies.get(UID_COOKIE)
-
-  return (
-    <StatsigProvider
-      sdkKey={process.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY!}
-      waitForInitialization={true}
-      user={{ userID }}
-    >
-      <Layout title="statsig-metric" path="solutions/statsig-metric">
-        <Component {...pageProps} />
-      </Layout>
-    </StatsigProvider>
-  )
-}`}</Snippet>
-        <Text>
-          Now we can tracks events by calling using the{' '}
-          <Code>Statsig.logEvent</Code> function to track events during your
-          experiments.
-        </Text>
-        <Snippet>{`import { Statsig } from 'statsig-react';
-
-...
-
-export default function MyComponent() {
-  return
-    <Button
-      onClick={() => {
-        // this can be any event like adding an item to a cart or clicking a CTA button.
-        Statsig.logEvent('button_clicked');
-      }}
-    />;
-}`}</Snippet>
       </section>
     </Page>
   )
